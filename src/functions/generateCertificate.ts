@@ -7,6 +7,7 @@ import chromium from "chrome-aws-lambda";
 
 import { document } from "../utils/dynamodbClient";
 import handlebars from "handlebars";
+import { APIGatewayProxyHandler } from "aws-lambda";
 
 interface ICreateCertificate {
   id: string;
@@ -22,33 +23,44 @@ interface ITemplate {
   medal: string;
 }
 
-const compile = function(data: ITemplate) {
+const compile = function (data: ITemplate) {
   const filePath = path.join(process.cwd(), "src", "templates", "certificate.hbs");
   const html = fs.readFileSync(filePath, "utf-8");
   const compile = handlebars.compile(html);
-  
+
   return compile(data);
 }
 
-export const handle = async (event) => {
+export const handle: APIGatewayProxyHandler = async (event) => {
   const { id, name, grade } = JSON.parse(event.body) as ICreateCertificate;
 
-
-  await document.put({
+  const response = await document.query({
     TableName: "users_certificates",
-    Item: {
-      id,
-      name,
-      grade,
-    },
-  }).promise();
+    KeyConditionExpression: "id = :id",
+    ExpressionAttributeValues: {
+      ":id": id
+    }
+  }).promise()
+
+  const [userAlreadyExists] = response.Items;
+
+  if (!userAlreadyExists) {
+    await document.put({
+      TableName: "users_certificates",
+      Item: {
+        id,
+        name,
+        grade,
+      },
+    }).promise();
+  }
 
   const medalPath = path.join(process.cwd(), "src", "templates", "seal.png");
   const medal = fs.readFileSync(medalPath, "base64");
 
   const data: ITemplate = {
     date: dayjs().format("DD/MM/YYYY"),
-    grade, 
+    grade,
     name,
     id,
     medal
@@ -69,7 +81,7 @@ export const handle = async (event) => {
   const pdf = await page.pdf({
     format: "a4",
     landscape: true,
-    path: process.env.IS_OFFLINE ? "certificate.pdf": null,
+    path: process.env.IS_OFFLINE ? "certificate.pdf" : null,
     printBackground: true,
     preferCSSPageSize: true
   });
