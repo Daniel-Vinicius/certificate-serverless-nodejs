@@ -12,7 +12,9 @@
     "babel-loader": "^8.2.2",
     "chrome-aws-lambda": "^10.1.0",
     "dayjs": "^1.10.6",
-    "handlebars": "^4.7.7"
+    "handlebars": "^4.7.7",
+    "puppeteer": "^10.1.0",
+    "puppeteer-core": "^10.1.0"
   },
   "devDependencies": {
     "@serverless/typescript": "^2.23.0",

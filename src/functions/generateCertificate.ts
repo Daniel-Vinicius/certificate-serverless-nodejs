@@ -22,7 +22,7 @@ interface ITemplate {
 }
 
 const compile = function(data: ITemplate) {
-  const filePath = path.join(process.cwd() + "src", "templates", "certificate.hbs");
+  const filePath = path.join(process.cwd(), "src", "templates", "certificate.hbs");
   const html = fs.readFileSync(filePath, "utf-8");
   const compile = handlebars.compile(html);
   
@@ -42,7 +42,7 @@ export const handle = async (event) => {
     },
   }).promise();
 
-  const medalPath = path.join(process.cwd() + "src", "templates", "seal.png");
+  const medalPath = path.join(process.cwd(), "src", "templates", "seal.png");
   const medal = fs.readFileSync(medalPath, "base64");
 
   const data: ITemplate = {
@@ -54,6 +54,26 @@ export const handle = async (event) => {
   }
 
   const content = compile(data);
+
+  const browser = await chromium.puppeteer.launch({
+    headless: true,
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath
+  });
+
+  const page = await browser.newPage();
+  await page.setContent(content);
+
+  await page.pdf({
+    format: "a4",
+    landscape: true,
+    path: process.env.IS_OFFLINE ? "certificate.pdf": null,
+    printBackground: true,
+    preferCSSPageSize: true
+  });
+
+  await browser.close();
 
   return {
     statusCode: 201,
