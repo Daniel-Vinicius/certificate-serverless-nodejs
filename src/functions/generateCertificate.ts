@@ -44,7 +44,18 @@ export const handle: APIGatewayProxyHandler = async (event) => {
 
   const [userAlreadyExists] = response.Items;
 
-  if (!userAlreadyExists) {
+  if (userAlreadyExists) {
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Certificate Valid",
+        name: userAlreadyExists.name,
+        grade: userAlreadyExists.grade,
+        url: `https://serverlesscertificateaws.s3.amazonaws.com/${userAlreadyExists.id}.pdf`
+      })
+    }
+  }
+
     await document.put({
       TableName: "users_certificates",
       Item: {
@@ -53,7 +64,6 @@ export const handle: APIGatewayProxyHandler = async (event) => {
         grade,
       },
     }).promise();
-  }
 
   const medalPath = path.join(process.cwd(), "src", "templates", "seal.png");
   const medal = fs.readFileSync(medalPath, "base64");
