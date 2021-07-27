@@ -25,12 +25,12 @@ provider:
   region: sa-east-1
 
 functions: 
-  hello:
-    handler: src/functions/hello.handle
+  generateCertificate:
+    handler: src/functions/generateCertificate.handle
     events:
       - http:
-          path: /hello
-          method: GET
+          path: /generateCertificate
+          method: POST
           cors: true
 
 
@@ -43,7 +43,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
-        AttributesDefinitions:
+        AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
         KeySchema:
